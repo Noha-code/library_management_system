@@ -8,13 +8,13 @@ class User {
         $this->db = getDBConnection();
     }
     
-    // Créer un nouvel utilisateur
+    // Create a new user
     public function register($username, $email, $password, $firstName, $lastName, $address = null, $phone = null) {
         try {
             if ($this->getUserByEmail($email) || $this->getUserByUsername($username)) {
                 return [
                     'success' => false,
-                    'message' => 'Cet email ou nom d\'utilisateur existe déjà'
+                    'message' => 'This email or username already exists'
                 ];
             }
             
@@ -41,54 +41,65 @@ class User {
             return [
                 'success' => true,
                 'user_id' => $userId,
-                'message' => 'Inscription réussie'
+                'message' => 'Registration successful'
             ];
         } catch (PDOException $e) {
             return [
                 'success' => false,
-                'message' => 'Erreur lors de l\'inscription: ' . $e->getMessage()
+                'message' => 'Error during registration: ' . $e->getMessage()
             ];
         }
     }
     
-    // Authentifier un utilisateur
-    public function login($email, $password) {
+    // Authenticate a user
+    public function login($identity, $password) {
         try {
-            $isEmail = filter_var($email, FILTER_VALIDATE_EMAIL);
-            $field = $isEmail ? 'email' : 'username';
+            // Check if input is an email, otherwise treat as username
+            $isEmail = filter_var($identity, FILTER_VALIDATE_EMAIL);
             
-            $stmt = $this->db->prepare("
-                SELECT u.*, GROUP_CONCAT(r.name) AS roles
-                FROM users u
-                LEFT JOIN user_roles ur ON u.id = ur.user_id
-                LEFT JOIN roles r ON ur.role_id = r.id
-                WHERE u.$field = :identity
-                GROUP BY u.id
-            ");
+            if ($isEmail) {
+                $stmt = $this->db->prepare("
+                    SELECT u.*, GROUP_CONCAT(r.name) AS roles
+                    FROM users u
+                    LEFT JOIN user_roles ur ON u.id = ur.user_id
+                    LEFT JOIN roles r ON ur.role_id = r.id
+                    WHERE u.email = :identity
+                    GROUP BY u.id
+                ");
+            } else {
+                $stmt = $this->db->prepare("
+                    SELECT u.*, GROUP_CONCAT(r.name) AS roles
+                    FROM users u
+                    LEFT JOIN user_roles ur ON u.id = ur.user_id
+                    LEFT JOIN roles r ON ur.role_id = r.id
+                    WHERE u.username = :identity
+                    GROUP BY u.id
+                ");
+            }
             
-            $stmt->execute([':identity' => $email]);
+            $stmt->execute([':identity' => $identity]);
             $user = $stmt->fetch();
             
-            $this->logLoginAttempt($email, $user['id'] ?? null, $_SERVER['REMOTE_ADDR'], false);
+            $this->logLoginAttempt($identity, $user['id'] ?? null, $_SERVER['REMOTE_ADDR'], false);
             
             if (!$user || !password_verify($password, $user['password'])) {
                 return [
                     'success' => false,
-                    'message' => 'Email/nom d\'utilisateur ou mot de passe incorrect'
+                    'message' => 'Email/username or password incorrect'
                 ];
             }
             
             if ($user['status'] !== 'active') {
                 return [
                     'success' => false,
-                    'message' => 'Ce compte est ' . $user['status'] . '. Veuillez contacter l\'administrateur.'
+                    'message' => 'This account is ' . $user['status'] . '. Please contact the administrator.'
                 ];
             }
             
             $updateStmt = $this->db->prepare("UPDATE users SET last_login = NOW() WHERE id = :id");
             $updateStmt->execute([':id' => $user['id']]);
             
-            $this->logLoginAttempt($email, $user['id'], $_SERVER['REMOTE_ADDR'], true);
+            $this->logLoginAttempt($identity, $user['id'], $_SERVER['REMOTE_ADDR'], true);
             
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
@@ -111,12 +122,13 @@ class User {
         } catch (PDOException $e) {
             return [
                 'success' => false,
-                'message' => 'Erreur lors de la connexion: ' . $e->getMessage()
+                'message' => 'Error during login: ' . $e->getMessage()
             ];
         }
     }
-    // private function
-    private function logLoginAttempt($email, $userId, $ipAddress, $success) {
+    
+    // Log login attempts
+    private function logLoginAttempt($identity, $userId, $ipAddress, $success) {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
     
         $stmt = $this->db->prepare("
@@ -126,25 +138,25 @@ class User {
     
         $stmt->execute([
             ':user_id' => $userId,
-            ':email' => $email,
+            ':email' => $identity,
             ':ip_address' => $ipAddress,
             ':success' => $success ? 1 : 0,
             ':user_agent' => $userAgent
         ]);
     }
     
-    // Déconnexion
+    // Logout
     public function logout() {
         session_unset();
         session_destroy();
         
         return [
             'success' => true,
-            'message' => 'Déconnexion réussie'
+            'message' => 'Logout successful'
         ];
     }
     
-    // Récupérer un utilisateur par son ID
+    // Get user by ID
     public function getUserById($id) {
         $stmt = $this->db->prepare("
             SELECT u.*, GROUP_CONCAT(r.name) AS roles
@@ -165,7 +177,7 @@ class User {
         return $user;
     }
     
-    // Récupérer un utilisateur par son email
+    // Get user by email
     public function getUserByEmail($email) {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email");
         $stmt->execute([':email' => $email]);
@@ -173,7 +185,7 @@ class User {
         return $stmt->fetch();
     }
     
-    // Récupérer un utilisateur par son nom d'utilisateur
+    // Get user by username
     public function getUserByUsername($username) {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE username = :username");
         $stmt->execute([':username' => $username]);
@@ -181,7 +193,7 @@ class User {
         return $stmt->fetch();
     }
     
-    // Attribuer un rôle à un utilisateur
+    // Assign role to user
     public function assignRole($userId, $roleName) {
         $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = :name");
         $stmt->execute([':name' => $roleName]);
@@ -202,7 +214,7 @@ class User {
         ]);
     }
     
-    // Mettre à jour le profil de l'utilisateur
+    // Update user profile
     public function updateProfile($userId, $data) {
         $allowedFields = ['first_name', 'last_name', 'address', 'phone'];
         $fields = [];
@@ -225,7 +237,7 @@ class User {
         return $stmt->execute($params);
     }
     
-    // Changer le mot de passe
+    // Change password
     public function changePassword($userId, $currentPassword, $newPassword) {
         $stmt = $this->db->prepare("SELECT password FROM users WHERE id = :id");
         $stmt->execute([':id' => $userId]);
@@ -234,7 +246,7 @@ class User {
         if (!$user || !password_verify($currentPassword, $user['password'])) {
             return [
                 'success' => false,
-                'message' => 'Mot de passe actuel incorrect'
+                'message' => 'Current password is incorrect'
             ];
         }
         
@@ -244,12 +256,12 @@ class User {
         if ($stmt->execute([':password' => $hashedPassword, ':id' => $userId])) {
             return [
                 'success' => true,
-                'message' => 'Mot de passe modifié avec succès'
+                'message' => 'Password changed successfully'
             ];
         } else {
             return [
                 'success' => false,
-                'message' => 'Erreur lors de la modification du mot de passe'
+                'message' => 'Error changing password'
             ];
         }
     }
