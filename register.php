@@ -90,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             background-color: #f8f9fa;
             padding-top: 40px;
+            padding-bottom: 40px;
         }
         .form-container {
             max-width: 500px;
