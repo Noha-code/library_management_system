@@ -1,45 +1,59 @@
 <?php
+// Enable error reporting for development (disable in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Include required files
 require_once 'config/database.php';
 require_once 'config/session.php';
 require_once 'user.php';
 
+// Initialize session
 initSession();
 
+// Redirect if already logged in
 if (isLoggedIn()) {
     header('Location: index.php');
     exit;
 }
 
 $errors = [];
-$success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CSRF protection
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $errors[] = "Security error, please try again.";
     } else {
-        $email = trim($_POST['email'] ?? '');
+        // Get and sanitize input
+        $identity = trim($_POST['identity'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        if (empty($email)) {
+        // Validate inputs
+        if (empty($identity)) {
             $errors[] = "Please enter your email or username.";
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = "Please enter a valid email address.";
         }
 
         if (empty($password)) {
             $errors[] = "Please enter your password.";
         }
 
+        // Attempt login
         if (empty($errors)) {
-            $user = new User();
-            $result = $user->login($email, $password);
+            try {
+                $user = new User();
+                $result = $user->login($identity, $password);
 
-            if ($result['success']) {
-                $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
-                header("Location: " . $redirect);
-                exit;
-            } else {
-                $errors[] = "User info not found.";
+                if (is_array($result) && !empty($result['success'])) {
+                    $redirect = $_GET['redirect'] ?? 'index.php';
+                    header("Location: " . $redirect);
+                    exit;
+                } else {
+                    $errors[] = $result['message'] ?? "Login information is incorrect.";
+                }
+            } catch (Exception $e) {
+                $errors[] = "An error occurred. Please try again later.";
+                // You could log this: error_log($e->getMessage());
             }
         }
     }
@@ -57,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             background-color: #f8f9fa;
             padding-top: 40px;
+            padding-bottom: 40px;
         }
         .form-container {
             max-width: 400px;
@@ -84,23 +99,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-container">
             <h2 class="form-title">Login</h2>
 
-            <?php
-            if (!empty($errors)) {
-                echo '<div class="alert alert-danger">';
-                foreach ($errors as $error) {
-                    echo '<p class="mb-0">' . htmlspecialchars($error) . '</p>';
-                }
-                echo '</div>';
-            }
-            ?>
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-danger">
+                    <?php foreach ($errors as $error): ?>
+                        <p class="mb-0"><?= htmlspecialchars($error) ?></p>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
 
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . (isset($_GET['redirect']) ? '?redirect=' . urlencode($_GET['redirect']) : ''); ?>">
-                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+            <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) . (isset($_GET['redirect']) ? '?redirect=' . urlencode($_GET['redirect']) : '') ?>">
+                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
 
                 <div class="form-group">
-                    <label for="email">Email or Username</label>
-                    <input type="text" class="form-control" id="email" name="email" required
-                           value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+                    <label for="identity">Email or Username</label>
+                    <input type="text" class="form-control" id="identity" name="identity" required
+                           value="<?= isset($_POST['identity']) ? htmlspecialchars($_POST['identity']) : (isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''); ?>">
                 </div>
 
                 <div class="form-group">
