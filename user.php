@@ -265,5 +265,57 @@ class User {
             ];
         }
     }
+    /**
+ * Delete a user account from the database
+ * 
+ * @param int $userId The ID of the user to delete
+ * @return bool True if deletion was successful, false otherwise
+ */
+public function deleteAccount($userId) {
+    try {
+        // Verify user exists
+        $stmt = $this->db->prepare("SELECT id FROM users WHERE id = ? AND status = 'active'");
+        $stmt->execute([$userId]);
+        
+        if (!$stmt->fetch()) {
+            // User not found or not active
+            return false;
+        }
+        
+        // Begin transaction
+        $this->db->beginTransaction();
+        
+        // First, handle foreign key constraints
+        // Delete user's borrowed books records (if you have such a table)
+        $stmt = $this->db->prepare("DELETE FROM borrowed_books WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        
+        // Delete user's reservations (if you have such a table)
+        $stmt = $this->db->prepare("DELETE FROM reservations WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        
+        // Delete other related records as needed...
+        
+        // Finally, delete the user
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        
+        // Commit transaction
+        $this->db->commit();
+        
+        return true;
+    } catch (PDOException $e) {
+        // Rollback transaction on error
+        if ($this->db->inTransaction()) {
+            $this->db->rollBack();
+        }
+        
+        // Log the error
+        // error_log('Delete account error: ' . $e->getMessage());
+        
+        return false;
+    }
+}
+
 }
 ?>
