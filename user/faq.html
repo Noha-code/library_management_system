@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Online Library</title>
+    <link rel="stylesheet" href="style1.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+            background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        
+        nav {
+            background-color: #512b58;
+            padding: 10px 20px;
+            color: white;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+            margin: 0;
+        }
+        
+        nav ul li {
+            margin: 0 15px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .btn {
+            background-color: #f4b083;
+            color: black !important;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .faq-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .faq-heading {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .faq-heading h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #512b58;
+            margin-bottom: 1rem;
+        }
+        
+        .faq-heading p {
+            color: #333;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            background-color: #fff;
+        }
+        
+        .faq-question {
+            background-color: #f1f1f1;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            color: #512b58;
+            transition: background-color 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: #e6e6e6;
+        }
+        
+        .faq-answer {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .faq-answer-content {
+            padding: 0 1rem;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .faq-answer-content ul {
+            padding-left: 20px;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+            padding: 1rem;
+        }
+        
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        
+        .faq-categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .faq-category {
+            padding: 0.5rem 1rem;
+            background-color: #f1f1f1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-category:hover, .faq-category.active {
+            background-color: #512b58;
+            color: white;
+        }
+        
+        .quote-section {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 3rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        .quote-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+            color: #512b58;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #512b58;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .faq-container {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            .faq-heading h1 {
+                font-size: 2rem;
+            }
+            
+            .faq-categories {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<?php
+session_start();
+?>
+
+<header>
+    <nav>
+        <ul>
+            <li><a href="index.php"><i class="fas fa-home category-icon"></i>Home</a></li>
+            <li><a href="emprunts.php"><i class="fas fa-book category-icon"></i>My Books</a></li>
+            <li><a href="recherche_livres.php"><i class="fas fa-search category-icon"></i>Browse</a></li>
+            <li><a href="about.php"><i class="fas fa-info-circle category-icon"></i>About us</a></li>
+            <li><a href="profil.php"><i class="fas fa-user-plus"></i> Your account</a></li>
+            <li><a href="logout.php" class="btn"><i class="fas fa-sign-in-alt"></i> Logout</a></li>
+            
+            
+        </ul>
+    </nav>
+</header>
+
+<section class="faq-container">
+    <div class="faq-heading">
+        <h1><i class="fas fa-question-circle"></i> Frequently Asked Questions</h1>
+        <p>Find answers to the most common questions about our Online Library.</p>
+    </div>
+    
+    <div class="faq-categories">
+        <div class="faq-category active" data-category="all">All Questions</div>
+        <div class="faq-category" data-category="account">Account</div>
+        <div class="faq-category" data-category="books">Books</div>
+        <div class="faq-category" data-category="borrowing">Borrowing</div>
+        <div class="faq-category" data-category="technical">Technical</div>
+    </div>
+    
+    <div class="faq-list">
+        <!-- Account Questions -->
+        <div class="faq-item" data-category="account">
+            <div class="faq-question">
+                <span>How do I create an account?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Creating an account is simple! Click on the "Sign Up" button in the navigation menu, fill in your information in the registration form, and submit. You'll receive a confirmation email to verify your account.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="account">
+            <div class="faq-question">
+                <span>I forgot my password. How can I reset it?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>On the login page, click on "Forgot Password". Enter your email address, and we'll send you instructions to reset your password. If you don't receive the email within a few minutes, check your spam folder.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="account">
+            <div class="faq-question">
+                <span>How can I update my profile information?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>After logging in, click on your username in the top navigation bar. From the dropdown menu, select "Profile Settings". Here you can update your personal information, change your password, and manage notification preferences.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Books Questions -->
+        <div class="faq-item" data-category="books">
+            <div class="faq-question">
+                <span>How many books are available in the library?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Our library currently offers over 5,000 books across various genres including novels, science fiction, biographies, and educational materials. We're continuously expanding our collection to offer more diverse reading options.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="books">
+            <div class="faq-question">
+                <span>Can I request a specific book to be added to the library?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Yes! We welcome book requests from our users. Please use the contact form at the bottom of the homepage with the subject "Book Request" and provide the title, author, and ISBN (if available). Our team will review your request and notify you if we add the book to our collection.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="books">
+            <div class="faq-question">
+                <span>What genres of books are available?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>We offer a wide variety of genres including:
+                    <ul>
+                        <li>Novels & Fiction</li>
+                        <li>Science Fiction & Fantasy</li>
+                        <li>Biographies & Memoirs</li>
+                        <li>Educational & Academic</li>
+                        <li>History & Politics</li>
+                        <li>Health & Self-Help</li>
+                        <li>Children's Books</li>
+                        <li>And many more!</li>
+                    </ul>
+                    Browse through our categories to find something that interests you.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Borrowing Questions -->
+        <div class="faq-item" data-category="borrowing">
+            <div class="faq-question">
+                <span>How do I borrow a book?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>To borrow a book, you need to be logged in to your account. Browse through our collection, find a book you like, and click on the "Borrow" button on the book's detail page. The book will be added to your "My Books" section and will be available for the lending period.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="borrowing">
+            <div class="faq-question">
+                <span>How long can I keep a borrowed book?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Books are lent for a period of 14 days. You can renew a book for an additional 7 days if no one else has requested it. You can renew by going to "My Books" section and clicking "Renew" next to the book you wish to extend.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="borrowing">
+            <div class="faq-question">
+                <span>Is there a limit to how many books I can borrow?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Yes, you can borrow up to 5 books at a time. Once you return any of these books, you can borrow additional ones. Premium members can borrow up to 10 books simultaneously.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="borrowing">
+            <div class="faq-question">
+                <span>How do I return a book?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Digital books are automatically returned after the lending period expires. If you wish to return a book early, go to "My Books", locate the book you want to return, and click on the "Return" button.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical Questions -->
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <span>What devices can I use to read the books?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Our books are compatible with most devices including computers, tablets, smartphones, and e-readers that support common formats like EPUB, PDF, and MOBI. You can read directly in your browser or download books for offline reading using our mobile app.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <span>The website is loading slowly. What can I do?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Try clearing your browser cache and cookies, or use a different browser. If the problem persists, it might be due to high traffic or maintenance. Please try again later or contact our support team if the issue continues.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <span>How secure is my personal information?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Your security is our priority. We use industry-standard encryption to protect all personal data. We never share your information with third parties without your consent. For more details, please refer to our Privacy Policy.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <span>Can I use the library on my mobile device?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>Yes! Our website is fully responsive and works well on all mobile devices. For an enhanced experience, you can download our dedicated mobile app available for iOS and Android from the respective app stores.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="quote-section">
+    <div class="quote-container">
+        <i class="fas fa-book-open quote-icon"></i>
+        <blockquote>
+            <p>A reader lives a thousand lives before he dies. The person who never reads lives only one.</p>
+            <cite>— George R.R. Martin</cite>
+        </blockquote>
+    </div>
+</section>
+
+<div class="back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</div>
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3>My Library</h3>
+            <p>Your online library accessible anytime.</p>
+        </div>
+        <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="index.php#books">My Books</a></li>
+                <li><a href="index.php#browse">Browse</a></li>
+                <li><a href="about.php">About us</a></li>
+                <li><a href="faq.php">Help</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h3>Contact</h3>
+            <p><i class="fas fa-envelope"></i> madiliikenza@gmail.com</p>
+            <p><i class="fas fa-phone"></i> +212617916252</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; <?php echo date('Y'); ?> My Library - All rights reserved</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ accordion functionality
+        const faqItems = document.querySelectorAll('.faq-item');
+        
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            
+            question.addEventListener('click', () => {
+                // Close all other items
+                faqItems.forEach(otherItem => {
+                    if (otherItem !== item && otherItem.classList.contains('active')) {
+                        otherItem.classList.remove('active');
+                    }
+                });
+                
+                // Toggle current item
+                item.classList.toggle('active');
+            });
+        });
+        
+        // Category filtering
+        const categories = document.querySelectorAll('.faq-category');
+        
+        categories.forEach(category => {
+            category.addEventListener('click', () => {
+                // Update active class
+                categories.forEach(cat => cat.classList.remove('active'));
+                category.classList.add('active');
+                
+                const selectedCategory = category.getAttribute('data-category');
+                
+                // Filter items
+                faqItems.forEach(item => {
+                    const itemCategory = item.getAttribute('data-category');
+                    
+                    if (selectedCategory === 'all' || selectedCategory === itemCategory) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Back to top button
+        const backToTopButton = document.querySelector('.back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.add('visible');
+            } else {
+                backToTopButton.classList.remove('visible');
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
